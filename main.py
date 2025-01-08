@@ -1,8 +1,20 @@
+import time
+import os
+
 import streamlit as st
 import google.generativeai as genai
+from google.api_core.exceptions import ResourceExhausted
+from dotenv import load_dotenv
 
-# Set your API key
-GEMINI_API_KEY = "AIzaSyAiDDXc8f6VFDhUdZMjDei2jAlW1W70bq4"
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the API key from the environment
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Check if the API key is loaded
+if GEMINI_API_KEY is None:
+    raise ValueError("API key not found. Please check the .env file.")
 
 # Configure API key
 genai.configure(api_key=GEMINI_API_KEY)
@@ -19,9 +31,18 @@ def gemini_pro_response(text, target_language):
         Here are the prescription texts:
         {text}
     """
-    response = gemini_pro_model.generate_content(prompt)
-    result = response.text  # Ensure to access the correct response property
-    return result
+    # response = gemini_pro_model.generate_content(prompt)
+    # result = response.text  # Ensure to access the correct response property
+    # return result
+    try:
+        response = gemini_pro_model.generate_content(prompt)
+        return response.text
+    except ResourceExhausted as e:
+        # Handle quota exceeded error
+        print(f"Error: {e}")
+        st.error("Quota exceeded. Please try again after a short wait.")
+        time.sleep(60)  # Wait for 60 seconds before retrying
+        return None
 
 
 # Function to create a download link
@@ -69,7 +90,7 @@ with col5:
     doctor_contact = st.text_input("Doctor's Contact:")
 
 # Input field for diagnosis
-diagnosis = st.text_area("Diagnosis:", height=60)
+diagnosis = st.text_area("Diagnosis:", height=68)
 
 # Input fields for treatment details in two rows of two columns each
 treatment_col1, treatment_col2 = st.columns(2)  # First row
@@ -120,7 +141,7 @@ for i in range(num_medications):
 # Known Allergies and Special Notes in two columns
 col_allergies, col_notes = st.columns(2)  # Two columns for allergies and notes
 with col_allergies:
-    allergies = st.text_area("Known Allergies (if any):", height=60)
+    allergies = st.text_area("Known Allergies (if any):", height=68)
 with col_notes:
     special_notes = st.text_area("Special Notes (if any):", height=100)
 
@@ -190,7 +211,7 @@ st.markdown("""
 <div style="text-align: center; margin-top: 50px;">
     <p style='font-size: 12px; color: grey;'>Disclaimer: While this AI translation tool aims for accuracy, please note that AI translations can make mistakes. Always consult with a healthcare professional for critical decisions.</p>
     <hr>
-    <p style="font-size: 12px; color: #888;">&copy; 2024 Saketh Yalamanchili. All rights reserved.</p>
+    <p style="font-size: 12px; color: #888;">&copy; 2025 Saketh Yalamanchili. All rights reserved.</p>
 </div>
 """, unsafe_allow_html=True)
 
