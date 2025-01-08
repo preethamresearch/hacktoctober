@@ -1,20 +1,10 @@
 import time
-import os
-
 import streamlit as st
 import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Get the API key from the environment
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-# Check if the API key is loaded
-if GEMINI_API_KEY is None:
-    raise ValueError("API key not found. Please check the .env file.")
+# Set your API key
+GEMINI_API_KEY = "AIzaSyBkIxH9VqRQJp9lvhKKbLs8bUj28u-dP0M"
 
 # Configure API key
 genai.configure(api_key=GEMINI_API_KEY)
