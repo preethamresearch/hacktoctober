@@ -11,7 +11,7 @@ Everything has been set up and verified. Here's how to get started:
 ---
 
 _Created with ❤️ by NeuroGrid_
-*Powered by DigitalOcean Gradient AI*
+_Powered by DigitalOcean Gradient AI_
 
 ### Method 1: Double-Click (Easiest) 🖱️
 

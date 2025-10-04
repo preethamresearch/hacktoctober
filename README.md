@@ -48,25 +48,25 @@ NeuroGrid ScriptSense is an advanced Streamlit-based web application that levera
 
 ## 📸 Screenshots
 
-![block diagram](images/medical-prescription-blockdiagram.png)
+![block diagram](Screen/medical-prescription-blockdiagram.png)
 _System Architecture_
 
-![Screenshot 1](images/img-001.png)
+![Screenshot 1](Screen/img-001.png)
 _Main Interface_
 
-![Screenshot 2](images/img-002.png)
+![Screenshot 2](Screen/img-002.png)
 _Prescription Input_
 
-![Screenshot 3](images/img-003.png)
+![Screenshot 3](Screen/img-003.png)
 _Medications_
 
-![Screenshot 4](images/img-004.png)
+![Screenshot 4](Screen/img-004.png)
 _Translation Results_
 
-![Screenshot 5](images/img-005.png)
+![Screenshot 5](Screen/img-005.png)
 _Multi-language Support _
 
-![Screenshot 6](images/img-006.png)
+![Screenshot 6](Screen/img-006.png)
 _Text to Speech audio output_
 
 ---
@@ -214,7 +214,7 @@ NeuroGrid-ScriptSense/
 ├── run_app.ps1                     # PowerShell script
 ├── .gitignore                      # Git ignore rules
 ├── .env.example                    # Environment variable template
-└── images/                         # Screenshots and diagrams
+└── Screen/                         # Screenshots and diagrams
     ├── medical-prescription-blockdiagram.png
     └── img-*.png
 ```

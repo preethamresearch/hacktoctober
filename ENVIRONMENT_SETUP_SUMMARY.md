@@ -147,9 +147,13 @@ Medical-Prescription-Translator/
 Instead of hardcoding the API key, create a `.env` file:
 
 ```env
+
 ```
+
 GRADIENT_MODEL_ACCESS_KEY=sk-do-oAn_SN0lZsh_vyBsRiLs69ZdYP5j2m7Ch2kdEFoUpv1J4PGdlE0QPI4y6q
+
 ```
+
 ```
 
 Then install and use `python-dotenv`:
