@@ -47,16 +47,25 @@ LANGUAGE_CODES = {
 def text_to_speech(text, language):
     """Convert text to speech and return audio bytes"""
     try:
+        # Create audio folder if it doesn't exist
+        audio_folder = "audio"
+        if not os.path.exists(audio_folder):
+            os.makedirs(audio_folder)
+        
         # Get language code
         lang_code = LANGUAGE_CODES.get(language, "en")
         
         # Create gTTS object
         tts = gTTS(text=text, lang=lang_code, slow=False)
         
-        # Save to BytesIO object
+        # Save to BytesIO object for download
         audio_bytes = BytesIO()
         tts.write_to_fp(audio_bytes)
         audio_bytes.seek(0)
+        
+        # Also save to audio folder
+        audio_file_path = os.path.join(audio_folder, f"prescription_audio_{language}.mp3")
+        tts.save(audio_file_path)
         
         return audio_bytes.getvalue()
     except Exception as e:

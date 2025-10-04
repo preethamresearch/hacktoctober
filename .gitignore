@@ -62,3 +62,7 @@ secrets.py
 *.tmp
 *.bak
 *.cache
+
+# Generated audio files
+audio/
+*.mp3
