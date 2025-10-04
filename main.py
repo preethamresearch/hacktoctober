@@ -1,18 +1,71 @@
 import time
 import streamlit as st
-import google.generativeai as genai
-from google.api_core.exceptions import ResourceExhausted
+from gradient import Gradient
+from gtts import gTTS
+import base64
+import os
+from io import BytesIO
 
 # Set your API key
-GEMINI_API_KEY = "AIzaSyBkIxH9VqRQJp9lvhKKbLs8bUj28u-dP0M"
+GRADIENT_MODEL_ACCESS_KEY = "sk-do-oAn_SN0lZsh_vyBsRiLs69ZdYP5j2m7Ch2kdEFoUpv1J4PGdlE0QPI4y6q"
 
-# Configure API key
-genai.configure(api_key=GEMINI_API_KEY)
+# Configure Gradient client
+gradient_client = Gradient(model_access_key=GRADIENT_MODEL_ACCESS_KEY)
+
+# Language code mapping for gTTS
+LANGUAGE_CODES = {
+    "Hindi": "hi",
+    "Bengali": "bn",
+    "Telugu": "te",
+    "Marathi": "mr",
+    "Tamil": "ta",
+    "Urdu": "ur",
+    "Gujarati": "gu",
+    "Malayalam": "ml",
+    "Kannada": "kn",
+    "Punjabi": "pa",
+    "Assamese": "as",
+    "Odia": "or",
+    "Maithili": "hi",  # Using Hindi as fallback
+    "Manipuri": "hi",  # Using Hindi as fallback
+    "Santhali": "hi",  # Using Hindi as fallback
+    "Kashmiri": "hi",  # Using Hindi as fallback
+    "Konkani": "hi",  # Using Hindi as fallback
+    "Dogri": "hi",     # Using Hindi as fallback
+    "Rajasthani": "hi", # Using Hindi as fallback
+    "Bodo": "hi",      # Using Hindi as fallback
+    "Sindhi": "sd",
+    "Haryanvi": "hi",  # Using Hindi as fallback
+    "Khasi": "hi",     # Using Hindi as fallback
+    "Mizo": "hi",      # Using Hindi as fallback
+    "Nagamese": "hi",  # Using Hindi as fallback
+    "Sorbian": "de",   # Using German as fallback
+}
 
 
-# Function to get a response from gemini-pro LLM
-def gemini_pro_response(text, target_language):
-    gemini_pro_model = genai.GenerativeModel("gemini-pro")
+# Function to convert text to speech
+def text_to_speech(text, language):
+    """Convert text to speech and return audio bytes"""
+    try:
+        # Get language code
+        lang_code = LANGUAGE_CODES.get(language, "en")
+        
+        # Create gTTS object
+        tts = gTTS(text=text, lang=lang_code, slow=False)
+        
+        # Save to BytesIO object
+        audio_bytes = BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_bytes.seek(0)
+        
+        return audio_bytes.getvalue()
+    except Exception as e:
+        st.error(f"Error generating speech: {e}")
+        return None
+
+
+# Function to get a response from Gradient AI LLM
+def gradient_ai_response(text, target_language):
     prompt = f"""
         You are a professional medical translator. Your task is to accurately translate the following medical prescriptions into {target_language}.
 
@@ -21,17 +74,22 @@ def gemini_pro_response(text, target_language):
         Here are the prescription texts:
         {text}
     """
-    # response = gemini_pro_model.generate_content(prompt)
-    # result = response.text  # Ensure to access the correct response property
-    # return result
     try:
-        response = gemini_pro_model.generate_content(prompt)
-        return response.text
-    except ResourceExhausted as e:
-        # Handle quota exceeded error
+        response = gradient_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model="llama3.3-70b-instruct",
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        # Handle quota exceeded or other errors
         print(f"Error: {e}")
-        st.error("Quota exceeded. Please try again after a short wait.")
-        time.sleep(60)  # Wait for 60 seconds before retrying
+        st.error("An error occurred. Please try again after a short wait.")
+        time.sleep(5)  # Wait for 5 seconds before retrying
         return None
 
 
@@ -44,12 +102,12 @@ def create_download_link(text, filename):
 
 
 # Streamlit app layout
-st.set_page_config(page_title="Medical Prescription Translator", layout="wide")
-st.title("🌟 Medical Prescription Translator 🌟")
+st.set_page_config(page_title="NeuroGrid ScriptSense", layout="wide")
+st.title("🌟 NeuroGrid ScriptSense 🌟")
 st.subheader("Translate your medical prescriptions accurately into Indian languages")
 
-# Gemini shoutout
-st.markdown("This app leverages **Gemini AI** for high-quality medical translations!")
+# Gradient AI shoutout
+st.markdown("This app leverages **DigitalOcean Gradient AI** for high-quality medical translations!")
 
 # Instructions for users
 st.markdown("""
@@ -59,8 +117,10 @@ st.markdown("""
 3. Select your target language from the dropdown.
    **You can choose from a variety of Indian languages, including Hindi, Bengali, Telugu, and many more!**
 4. Click the "Translate" button to get the translated prescription.
-5. If you find that the translation is incorrect, feel free to click the "Translate" button again for a new translation.
-6. Ensure to include all necessary details for better accuracy.
+5. **NEW! 🔊** Listen to the audio version of the translated prescription.
+6. Download both the text and audio versions of the translation.
+7. If you find that the translation is incorrect, feel free to click the "Translate" button again for a new translation.
+8. Ensure to include all necessary details for better accuracy.
 """)
 
 # Input fields for patient details using columns
@@ -174,25 +234,48 @@ if st.button("Translate"):
         prescription_text += f"Special Notes:\n{special_notes if special_notes else 'None'}\n"
 
         with st.spinner("Translating..."):
-            translated_text = gemini_pro_response(prescription_text.strip(), selected_language)
+            translated_text = gradient_ai_response(prescription_text.strip(), selected_language)
 
-            # Remove any unwanted '**' symbols from the translated text
-            cleaned_translated_text = translated_text.replace("**", "")
+            # Check if translation was successful
+            if translated_text is None:
+                st.error("Translation failed. Please check your API key and try again.")
+            else:
+                # Remove any unwanted '**' symbols from the translated text
+                cleaned_translated_text = translated_text.replace("**", "")
 
-            st.success("Translation Complete!")
+                st.success("Translation Complete!")
 
-            # Format the output for download: Translated language first, followed by English
-            download_content = f"Translated Prescription in {selected_language}:\n\n{cleaned_translated_text}\n\n----------\n\nOriginal Prescription in English:\n\n{prescription_text.strip()}"
+                # Format the output for download: Translated language first, followed by English
+                download_content = f"Translated Prescription in {selected_language}:\n\n{cleaned_translated_text}\n\n----------\n\nOriginal Prescription in English:\n\n{prescription_text.strip()}"
 
-            # Display the cleaned translated text
-            st.subheader(f"Translated Prescription in {selected_language}:")
-            st.text(cleaned_translated_text)
+                # Display the cleaned translated text
+                st.subheader(f"Translated Prescription in {selected_language}:")
+                st.text(cleaned_translated_text)
 
-            # Create a download link for the cleaned translated text
-            download_link = create_download_link(download_content, f"translated_prescription_{selected_language}.txt")
-            st.markdown(
-                f'<a href="{download_link}" download="translated_prescription_{selected_language}.txt"><button style="color: white; background-color: #4CAF50; border: none; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">Download Translated Prescription</button></a>',
-                unsafe_allow_html=True)
+                # Generate Text-to-Speech
+                st.subheader("🔊 Audio Playback:")
+                with st.spinner("Generating audio..."):
+                    audio_data = text_to_speech(cleaned_translated_text, selected_language)
+                    
+                    if audio_data:
+                        st.audio(audio_data, format='audio/mp3')
+                        st.success("Audio generated successfully! Click play to listen.")
+                        
+                        # Create download button for audio
+                        st.download_button(
+                            label="📥 Download Audio (MP3)",
+                            data=audio_data,
+                            file_name=f"prescription_audio_{selected_language}.mp3",
+                            mime="audio/mp3"
+                        )
+                    else:
+                        st.warning("Could not generate audio. Text translation is still available.")
+
+                # Create a download link for the cleaned translated text
+                download_link = create_download_link(download_content, f"translated_prescription_{selected_language}.txt")
+                st.markdown(
+                    f'<a href="{download_link}" download="translated_prescription_{selected_language}.txt"><button style="color: white; background-color: #4CAF50; border: none; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">Download Translated Prescription</button></a>',
+                    unsafe_allow_html=True)
     else:
         st.error("Please fill in the patient details and at least one medication before translating.")
 
@@ -201,7 +284,7 @@ st.markdown("""
 <div style="text-align: center; margin-top: 50px;">
     <p style='font-size: 12px; color: grey;'>Disclaimer: While this AI translation tool aims for accuracy, please note that AI translations can make mistakes. Always consult with a healthcare professional for critical decisions.</p>
     <hr>
-    <p style="font-size: 12px; color: #888;">&copy; 2025 Saketh Yalamanchili. All rights reserved.</p>
+    <p style="font-size: 12px; color: #888;">&copy; 2025 NeuroGrid. All rights reserved.</p>
 </div>
 """, unsafe_allow_html=True)
 
